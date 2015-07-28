@@ -13,7 +13,11 @@ module IssueProjectPatch
             has_one :key, :class_name => 'ProjectIssueKey', :primary_key => :issue_key, :foreign_key => :project_key
 
             validates_length_of :issue_key, :in => 1..Project::ISSUE_KEY_MAX_LENGTH, :allow_blank => true
-            validates_format_of :issue_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true
+			if Redmine::VERSION::MAJOR >= 3
+            	validates_format_of :issue_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true, :multiline => true
+			else
+				validates_format_of :issue_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true
+			end
 
             validate :validate_issue_key_duplicates
 
@@ -75,14 +79,26 @@ module IssueProjectPatch
 
         def migrate_issue_ids
             if issue_key.present? && !skip_issue_migration?
-                project_key = ProjectIssueKey.find_or_create_by_project_key(issue_key)
-                Issue.all(:conditions => { :project_id => project_key.projects.collect(&:id),
-                                           :project_key => nil,
-                                           :issue_number => nil },
-                          :order => :id).each do |issue|
-                    issue_number = project_key.reserve_issue_number!
-                    issue.update_attributes(:project_key => issue_key, :issue_number => issue_number)
-                end
+
+				if Redmine::VERSION::MAJOR >= 3
+					project_key = ProjectIssueKey.where(project_key: issue_key).first_or_create
+					Issue.where(:project_id => project_key.projects.collect(&:id),
+	                                       :project_key => nil,
+	                                       :issue_number => nil).order(:id).each do |issue|
+    	                issue_number = project_key.reserve_issue_number!
+    	                issue.update_attributes(:project_key => issue_key, :issue_number => issue_number)
+	                end
+				else
+			        project_key = ProjectIssueKey.find_or_create_by_project_key(issue_key)
+			        Issue.all(:conditions => { :project_id => project_key.projects.collect(&:id),
+			                                   :project_key => nil,
+			                                   :issue_number => nil },
+			                  :order => :id).each do |issue|
+
+    	                issue_number = project_key.reserve_issue_number!
+    	                issue.update_attributes(:project_key => issue_key, :issue_number => issue_number)
+	                end
+				end
             end
         end
 

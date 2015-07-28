@@ -9,6 +9,10 @@ if Rails::VERSION::MAJOR < 3
 else
 
     # Overrides
-    match('/issues/:id/quoted', :to => 'journals#new', :id => %r{(?:[A-Z0-9]+-)?[0-9]+}i, :via => :post, :as => 'quoted_issue')
+	if Redmine::VERSION::MAJOR >= 3
+		match '/issues/:id/quoted', :to => 'journals#new', :id => %r{(?:[A-Z0-9]+-)?[0-9]+}i, :via => :post
+	else
+	    match('/issues/:id/quoted', :to => 'journals#new', :id => %r{(?:[A-Z0-9]+-)?[0-9]+}i, :via => :post, :as => 'quoted_issue')
+	end
 
 end

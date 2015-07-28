@@ -10,7 +10,11 @@ module IssueIdPatch
 
             validates_uniqueness_of :issue_number, :scope => :project_key, :allow_blank => true, :if => Proc.new { |issue| issue.issue_number_changed? }
             validates_length_of :project_key, :in => 1..Project::ISSUE_KEY_MAX_LENGTH, :allow_blank => true
-            validates_format_of :project_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true
+			if Redmine::VERSION::MAJOR >= 3
+            	validates_format_of :project_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true, :multiline => true
+			else
+				validates_format_of :project_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true
+			end
 
             after_save :create_moved_issue, :generate_issue_id
 
@@ -88,8 +92,13 @@ module IssueIdPatch
             if !support_issue_id? && project.issue_key.present?
                 reserved_number = ProjectIssueKey.reserve_issue_number!(project.issue_key)
                 if reserved_number
-                    Issue.update_all({ :project_key => project.issue_key,
+					if Redmine::VERSION::MAJOR >= 3
+						Issue.where(:id => id).update_all({ :project_key => project.issue_key,
+						                           :issue_number => reserved_number } )
+					else
+						Issue.update_all({ :project_key => project.issue_key,
                                        :issue_number => reserved_number }, :id => id)
+					end
                     reload
                 end
             end
