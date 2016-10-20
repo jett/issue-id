@@ -14,9 +14,11 @@ module IssueProjectPatch
 
             validates_length_of :issue_key, :in => 1..Project::ISSUE_KEY_MAX_LENGTH, :allow_blank => true
 			if Redmine::VERSION::MAJOR >= 3
-            	validates_format_of :issue_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true, :multiline => true
+                #validates_format_of :issue_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true, :multiline => true
+                validates_format_of :issue_key, :with => %r{\A[A-Z][A-Z0-9]*\z}, :allow_blank => true, :multiline => true
 			else
-				validates_format_of :issue_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true
+				#validates_format_of :issue_key, :with => %r{^[A-Z][A-Z0-9]*$}, :allow_blank => true
+                                validates_format_of :issue_key, :with => %r{\A[A-Z][A-Z0-9]*\z}, :allow_blank => true
 			end
 
             validate :validate_issue_key_duplicates

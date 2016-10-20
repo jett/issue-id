@@ -39,11 +39,13 @@ module IssueChangesetPatch
             return if comments.blank?
             ref_keywords      = Setting.commit_ref_keywords.downcase.split(',').collect(&:strip)
             ref_keywords_any  = ref_keywords.delete('*')
-            fix_keywords      = Setting.commit_fix_keywords.downcase.split(',').collect(&:strip)
-            kw_regexp         = (ref_keywords + fix_keywords).collect{ |kw| Regexp.escape(kw) }.join('|')
+            #fix_keywords      = Setting.commit_fix_keywords.downcase.split(',').collect(&:strip)
+            #kw_regexp         = (ref_keywords + fix_keywords).collect{ |kw| Regexp.escape(kw) }.join('|')
+            kw_regexp         = (ref_keywords).collect{ |kw| Regexp.escape(kw) }.join('|')
             referenced_issues = []
 
-            comments.scan(/([\s\(\[,-]|^)((#{kw_regexp})[\s:]+)?(##{ISSUE_ID_RE}(\s+@#{Changeset::TIMELOG_RE})?([\s,;&]+##{ISSUE_ID_RE}(\s+@#{Changeset::TIMELOG_RE})?)*)(?=[[:punct:]]|\s|<|$)/i) do |match|
+            #comments.scan(/([\s\(\[,-]|^)((#{kw_regexp})[\s:]+)?(##{ISSUE_ID_RE}(\s+@#{Changeset::TIMELOG_RE})?([\s,;&]+##{ISSUE_ID_RE}(\s+@#{Changeset::TIMELOG_RE})?)*)(?=[[:punct:]]|\s|<|$)/i) do |match|
+            comments.scan(/([\s\(\[,-]|\A)((#{kw_regexp})[\s:]+)?(##{ISSUE_ID_RE}(\s+@#{Changeset::TIMELOG_RE})?([\s,;&]+##{ISSUE_ID_RE}(\s+@#{Changeset::TIMELOG_RE})?)*)(?=[[:punct:]]|\s|<|\z)/i) do |match|
                 action, refs = match[2].to_s.downcase, match[3]
                 next unless action.present? || ref_keywords_any
                 refs.scan(/#(#{ISSUE_ID_RE})(\s+@#{Changeset::TIMELOG_RE})?/).each do |m|
