@@ -6,7 +6,8 @@ class ProjectIssueKey < ActiveRecord::Base
     validates_presence_of :project_key
     validates_uniqueness_of :project_key
     validates_length_of :project_key, :in => 1..Project::ISSUE_KEY_MAX_LENGTH
-    validates_format_of :project_key, :with => %r{^[A-Z][A-Z0-9]*$}, :if => Proc.new { |key| key.project_key_changed? }, :multiline => true
+    #validates_format_of :project_key, :with => %r{^[A-Z][A-Z0-9]*$}, :if => Proc.new { |key| key.project_key_changed? }, :multiline => true
+    validates_format_of :project_key, :with => %r{\A[A-Z][A-Z0-9]*\z}, :if => Proc.new { |key| key.project_key_changed? }, :multiline => true
 
     safe_attributes 'project_key'
 
